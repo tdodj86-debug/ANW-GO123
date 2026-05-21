@@ -2,8 +2,9 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบตารางเรียนและผลการเรียน (Pro Version)</title>
+    <!-- 🔥 แก้ไข: เพิ่ม maximum-scale=1.0 ป้องกันมือถือซูมหน้าจอเวลากดปุ่ม -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบตารางเรียนและผลการเรียน (Mobile Pro Version)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -11,26 +12,27 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .clickable-row { cursor: pointer; transition: all 0.2s; }
-        .clickable-row:hover { background-color: #eff6ff; transform: scale(1.01); border-left: 4px solid #3b82f6; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .highlight-update { animation: highlight 2s ease-in-out; }
-        @keyframes highlight { 0% { background-color: #fef08a; } 100% { background-color: transparent; } }
+        .clickable-row:hover { background-color: #eff6ff; border-left: 4px solid #3b82f6; }
         
-        /* สไตล์สำหรับ Toast แจ้งเตือน */
-        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: #ef4444; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s, fadeOut 0.5s 2.5s forwards; }
+        /* 🔥 แก้ไข: เติม pointer-events-none ป้องกันกล่องแจ้งเตือนใสๆ มาบังปุ่มกดในมือถือ */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background: #ef4444; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s, fadeOut 0.5s 2.5s forwards; pointer-events: auto; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+        /* ทำให้ Select ในมือถือกดง่ายขึ้น */
+        select { cursor: pointer; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body class="text-gray-800 relative">
 
-    <div id="toast-container"></div> <!-- ส่วนแจ้งเตือนสวยๆ -->
+    <div id="toast-container"></div>
 
     <!-- Navbar -->
     <nav class="bg-gradient-to-r from-blue-800 to-blue-600 text-white p-4 shadow-lg sticky top-0 z-40">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2">
-                <span>📚</span> School Portal <span class="hidden md:inline"> : ระบบจัดการผลการเรียน</span>
+            <h1 class="text-lg md:text-2xl font-bold flex items-center gap-2">
+                <span>📚</span> School Portal
             </h1>
             <div class="flex items-center gap-2">
                 <span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>
@@ -39,17 +41,18 @@
         </div>
     </nav>
 
-    <div class="container mx-auto mt-8 p-4 max-w-5xl">
-        <!-- ค้นหาข้อมูล -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+    <div class="container mx-auto mt-6 p-4 max-w-5xl">
+        <!-- 🔥 แก้ไข: เพิ่ม relative z-20 ดันกล่องนี้ให้ลอยอยู่บนสุด ป้องกันอะไรมาบัง -->
+        <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 mb-6 relative z-20">
             <h2 class="text-xl font-semibold mb-4 text-gray-700">ค้นหาข้อมูลผู้ใช้งาน</h2>
-            <div class="flex space-x-4 mb-5 bg-gray-100 p-1 rounded-lg">
-                <button onclick="setMode('student')" id="btn-student" class="flex-1 bg-white text-blue-600 py-2 rounded-md font-bold shadow-sm transition-all duration-200">👨‍🎓 ข้อมูลนักเรียน</button>
-                <button onclick="setMode('teacher')" id="btn-teacher" class="flex-1 text-gray-600 py-2 rounded-md font-bold hover:bg-gray-200 transition-all duration-200">👩‍🏫 ข้อมูลคุณครู</button>
+            <div class="flex space-x-2 mb-5 bg-gray-100 p-1 rounded-lg">
+                <button onclick="setMode('student')" id="btn-student" class="flex-1 bg-white text-blue-600 py-2.5 rounded-md font-bold shadow-sm transition-all duration-200 text-sm md:text-base">👨‍🎓 นักเรียน</button>
+                <button onclick="setMode('teacher')" id="btn-teacher" class="flex-1 text-gray-600 py-2.5 rounded-md font-bold hover:bg-gray-200 transition-all duration-200 text-sm md:text-base">👩‍🏫 คุณครู</button>
             </div>
 
-            <div id="student-selectors" class="flex flex-col md:flex-row gap-4">
-                <select id="grade-select" class="w-full md:w-1/3 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+            <!-- เมนูเลือกนักเรียน -->
+            <div id="student-selectors" class="flex flex-col md:flex-row gap-3">
+                <select id="grade-select" class="w-full md:w-1/3 p-3.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 text-base md:text-lg shadow-sm">
                     <option value="">-- 1. เลือกระดับชั้น --</option>
                     <option value="m1">มัธยมศึกษาปีที่ 1</option>
                     <option value="m2">มัธยมศึกษาปีที่ 2</option>
@@ -58,42 +61,43 @@
                     <option value="m5">มัธยมศึกษาปีที่ 5</option>
                     <option value="m6">มัธยมศึกษาปีที่ 6</option>
                 </select>
-                <select id="room-select" class="w-full md:w-1/3 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                <select id="room-select" class="w-full md:w-1/3 p-3.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 text-base md:text-lg shadow-sm">
                     <option value="">-- 2. เลือกห้องเรียน --</option>
                 </select>
-                <select id="student-select" class="w-full md:w-1/3 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                <select id="student-select" class="w-full md:w-1/3 p-3.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 text-base md:text-lg shadow-sm">
                     <option value="">-- 3. เลือกรายชื่อนักเรียน --</option>
                 </select>
             </div>
 
+            <!-- เมนูเลือกครู -->
             <div id="teacher-selectors" class="hidden">
-                <select id="teacher-select" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                <select id="teacher-select" class="w-full p-3.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 text-base md:text-lg shadow-sm">
                     <option value="">-- เลือกชื่อคุณครู (ค้นหาจาก 80 ท่าน) --</option>
                 </select>
             </div>
             
-            <button onclick="fetchData()" class="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-blue-700 transform hover:-translate-y-0.5 transition-all shadow-md">
+            <button onclick="fetchData()" class="mt-6 w-full bg-blue-600 text-white py-3.5 rounded-lg font-bold text-lg hover:bg-blue-700 active:bg-blue-800 transition-all shadow-md">
                 🔍 ตรวจสอบข้อมูล
             </button>
         </div>
 
         <!-- หน้าจอแสดงผล -->
-        <div id="display-area" class="hidden bg-white p-6 rounded-xl shadow-sm border border-gray-100 fade-in">
-            <div class="flex flex-col md:flex-row justify-between items-center border-b pb-4 mb-6 gap-2">
-                <h2 id="display-title" class="text-2xl font-bold text-gray-800">กำลังโหลด...</h2>
-                <div class="text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full flex items-center gap-2">
+        <div id="display-area" class="hidden bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 mb-6 gap-3">
+                <h2 id="display-title" class="text-xl md:text-2xl font-bold text-gray-800">กำลังโหลด...</h2>
+                <div class="text-xs md:text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full flex items-center gap-2 w-full md:w-auto justify-center">
                     ⏱️ อัปเดตล่าสุด: <span id="last-update" class="font-bold text-blue-600">ตอนนี้</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- คอลัมน์ซ้าย: รูปภาพ -->
                 <div class="lg:col-span-1">
-                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 h-full">
-                        <div class="relative rounded-lg overflow-hidden h-64 shadow-inner bg-gray-200 group">
-                            <img id="schedule-img" src="" alt="Profile" class="object-cover w-full h-full transition duration-500 group-hover:scale-105">
+                    <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                        <div class="relative rounded-lg overflow-hidden h-56 md:h-64 shadow-inner bg-gray-200">
+                            <img id="schedule-img" src="" alt="Profile" class="object-cover w-full h-full">
                             <div id="update-badge" class="hidden absolute top-3 right-3 bg-green-500 text-white text-xs px-3 py-1.5 rounded-full shadow-lg font-bold animate-pulse">
-                                ✓ ข้อมูลล่าสุด
+                                ✓ อัปเดตแล้ว
                             </div>
                         </div>
                     </div>
@@ -102,12 +106,12 @@
                 <!-- คอลัมน์ขวา: ตาราง -->
                 <div class="lg:col-span-2">
                     <div class="overflow-x-auto border border-gray-200 rounded-xl shadow-sm">
-                        <table class="w-full text-left border-collapse bg-white">
+                        <table class="w-full text-left border-collapse bg-white min-w-full">
                             <thead>
                                 <tr class="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
-                                    <th class="p-4 font-semibold">รายวิชา</th>
-                                    <th class="p-4 font-semibold hidden md:table-cell">เวลาเรียน</th>
-                                    <th class="p-4 font-semibold text-center w-32">เกรด / ผลการเรียน</th>
+                                    <th class="p-3 md:p-4 font-semibold whitespace-nowrap">รายวิชา</th>
+                                    <th class="p-3 md:p-4 font-semibold hidden md:table-cell">เวลาเรียน</th>
+                                    <th class="p-3 md:p-4 font-semibold text-center w-24 md:w-32">เกรด</th>
                                 </tr>
                             </thead>
                             <tbody id="schedule-table" class="text-sm divide-y divide-gray-100">
@@ -115,44 +119,42 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-xs text-gray-400 mt-3 text-right">💡 คลิกที่แถวรายวิชาเพื่อดูรายละเอียดคะแนนเชิงลึก</p>
+                    <p class="text-xs text-gray-400 mt-2 text-center md:text-right">💡 แตะที่รายวิชาเพื่อดูรายละเอียด</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Modal รายละเอียด -->
-    <div id="detail-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm transition-opacity">
-        <!-- เพิ่ม onlick ข้างนอกเพื่อปิด -->
+    <div id="detail-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm transition-opacity p-4">
         <div class="absolute inset-0" onclick="closeModal()"></div> 
-        
-        <div class="bg-white rounded-2xl p-6 w-11/12 md:w-[500px] shadow-2xl relative z-10 transform transition-all scale-100">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-gray-100 hover:bg-red-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors">&times;</button>
+        <div class="bg-white rounded-2xl p-5 md:p-6 w-full md:w-[500px] shadow-2xl relative z-10">
+            <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center text-xl">&times;</button>
             
-            <div class="border-b border-gray-100 pb-4 mb-5">
-                <h3 id="modal-subject" class="text-xl md:text-2xl font-bold text-gray-800">ชื่อวิชา</h3>
-                <p id="modal-time" class="text-blue-600 font-semibold text-sm mt-1 bg-blue-50 inline-block px-2 py-1 rounded">เวลาเรียน</p>
+            <div class="border-b border-gray-100 pb-3 mb-4 mt-2">
+                <h3 id="modal-subject" class="text-xl md:text-2xl font-bold text-gray-800 leading-tight">ชื่อวิชา</h3>
+                <p id="modal-time" class="text-blue-600 font-semibold text-xs md:text-sm mt-1 bg-blue-50 inline-block px-2 py-1 rounded">เวลาเรียน</p>
             </div>
             
             <div class="space-y-3 text-gray-700">
                 <div class="flex items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <span class="text-2xl mr-4 bg-white p-2 rounded-lg shadow-sm">👨‍🏫</span>
-                    <div><p class="text-xs text-gray-400 uppercase tracking-wide">ผู้สอน</p><p id="modal-teacher" class="font-semibold text-gray-800">ชื่อครู</p></div>
+                    <span class="text-xl md:text-2xl mr-3 bg-white p-2 rounded-lg shadow-sm">👨‍🏫</span>
+                    <div><p class="text-[10px] md:text-xs text-gray-400 uppercase">ผู้สอน</p><p id="modal-teacher" class="font-semibold text-sm md:text-base text-gray-800">ชื่อครู</p></div>
                 </div>
                 
                 <div class="flex items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <span class="text-2xl mr-4 bg-white p-2 rounded-lg shadow-sm">🏫</span>
-                    <div><p class="text-xs text-gray-400 uppercase tracking-wide">สถานที่</p><p id="modal-room" class="font-semibold text-gray-800">ห้อง</p></div>
+                    <span class="text-xl md:text-2xl mr-3 bg-white p-2 rounded-lg shadow-sm">🏫</span>
+                    <div><p class="text-[10px] md:text-xs text-gray-400 uppercase">สถานที่</p><p id="modal-room" class="font-semibold text-sm md:text-base text-gray-800">ห้อง</p></div>
                 </div>
 
-                <div id="modal-score-section" class="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 mt-4">
-                    <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">📊 สรุปคะแนนสะสม</h4>
-                    <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
+                <div id="modal-score-section" class="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 mt-4">
+                    <h4 class="font-bold text-blue-800 mb-2 text-sm flex items-center gap-1">📊 สรุปคะแนน</h4>
+                    <div class="grid grid-cols-2 gap-y-2 gap-x-2 text-xs md:text-sm">
                         <div class="text-gray-600">คะแนนเก็บ:</div><div id="modal-score-keep" class="font-semibold text-right">0/40</div>
-                        <div class="text-gray-600">สอบกลางภาค:</div><div id="modal-score-mid" class="font-semibold text-right">0/20</div>
-                        <div class="text-gray-600">สอบปลายภาค:</div><div id="modal-score-final" class="font-semibold text-right">0/40</div>
+                        <div class="text-gray-600">กลางภาค:</div><div id="modal-score-mid" class="font-semibold text-right">0/20</div>
+                        <div class="text-gray-600">ปลายภาค:</div><div id="modal-score-final" class="font-semibold text-right">0/40</div>
                         <div class="col-span-2 border-t border-blue-200/50 my-1"></div>
-                        <div class="font-bold text-gray-800">คะแนนรวมสุทธิ:</div><div id="modal-score-total" class="font-black text-blue-700 text-right text-lg">0/100</div>
+                        <div class="font-bold text-gray-800">รวมสุทธิ:</div><div id="modal-score-total" class="font-black text-blue-700 text-right text-base">0/100</div>
                     </div>
                 </div>
             </div>
@@ -161,21 +163,25 @@
 
     <script>
         let currentMode = 'student';
-        let simulationTimer = null; // ตัวแปรเก็บเวลา กันบัคกดย้ำ
+        let simulationTimer = null;
 
-        // 1. สร้างตัวเลือกอัตโนมัติ
-        window.onload = () => {
+        // 🔥 แก้ไข: สร้างฟังก์ชันเพื่อยัดตัวเลือกลงในช่อง และเรียกใช้ทันที (ไม่ต้องรอ onload)
+        function initSelectOptions() {
             const roomSelect = document.getElementById('room-select');
+            roomSelect.innerHTML = `<option value="">-- 2. เลือกห้องเรียน --</option>`;
             for(let i=1; i<=10; i++) roomSelect.innerHTML += `<option value="${i}">ห้องเรียนที่ ${i}</option>`;
 
             const studentSelect = document.getElementById('student-select');
-            for(let i=1; i<=40; i++) studentSelect.innerHTML += `<option value="${i}">เลขที่ ${String(i).padStart(2,'0')} - ชื่อนักเรียนจำลอง</option>`;
+            studentSelect.innerHTML = `<option value="">-- 3. เลือกรายชื่อนักเรียน --</option>`;
+            for(let i=1; i<=40; i++) studentSelect.innerHTML += `<option value="${i}">เลขที่ ${String(i).padStart(2,'0')} - ชื่อจำลอง</option>`;
 
             const teacherSelect = document.getElementById('teacher-select');
-            for(let i=1; i<=80; i++) teacherSelect.innerHTML += `<option value="teacher${i}">รหัส ${String(i).padStart(3, '0')} - อ. ทดสอบ ระบบที่ ${i}</option>`;
-        };
+            teacherSelect.innerHTML = `<option value="">-- เลือกชื่อคุณครู (ค้นหาจาก 80 ท่าน) --</option>`;
+            for(let i=1; i<=80; i++) teacherSelect.innerHTML += `<option value="teacher${i}">รหัส ${String(i).padStart(3, '0')} - อ. ทดสอบที่ ${i}</option>`;
+        }
+        // สั่งทำงานทันที
+        initSelectOptions();
 
-        // ฟังก์ชันสร้างแจ้งเตือนสวยๆ แทน Alert แบบเก่า
         function showToast(message) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -185,7 +191,6 @@
             setTimeout(() => { toast.remove(); }, 3000);
         }
 
-        // 2. เปลี่ยนโหมดการค้นหา
         function setMode(mode) {
             currentMode = mode;
             document.getElementById('display-area').classList.add('hidden');
@@ -194,19 +199,18 @@
             const btnT = document.getElementById('btn-teacher');
 
             if(mode === 'student') {
-                btnS.className = "flex-1 bg-white text-blue-600 py-2 rounded-md font-bold shadow-sm transition-all duration-200";
-                btnT.className = "flex-1 text-gray-600 py-2 rounded-md font-bold hover:bg-gray-200 transition-all duration-200";
+                btnS.className = "flex-1 bg-white text-blue-600 py-2.5 rounded-md font-bold shadow-sm transition-all text-sm md:text-base";
+                btnT.className = "flex-1 text-gray-600 py-2.5 rounded-md font-bold hover:bg-gray-200 transition-all text-sm md:text-base";
                 document.getElementById('student-selectors').style.display = 'flex';
                 document.getElementById('teacher-selectors').style.display = 'none';
             } else {
-                btnT.className = "flex-1 bg-white text-blue-600 py-2 rounded-md font-bold shadow-sm transition-all duration-200";
-                btnS.className = "flex-1 text-gray-600 py-2 rounded-md font-bold hover:bg-gray-200 transition-all duration-200";
+                btnT.className = "flex-1 bg-white text-blue-600 py-2.5 rounded-md font-bold shadow-sm transition-all text-sm md:text-base";
+                btnS.className = "flex-1 text-gray-600 py-2.5 rounded-md font-bold hover:bg-gray-200 transition-all text-sm md:text-base";
                 document.getElementById('teacher-selectors').style.display = 'block';
                 document.getElementById('student-selectors').style.display = 'none';
             }
         }
 
-        // 3. ฟังก์ชัน Modal
         function openModal(subject, time, teacher, room, type, keep, mid, final, total) {
             document.getElementById('modal-subject').innerText = subject;
             document.getElementById('modal-time').innerText = "⏱️ " + time;
@@ -217,10 +221,10 @@
                 document.getElementById('modal-score-section').classList.add('hidden');
             } else {
                 document.getElementById('modal-score-section').classList.remove('hidden');
-                document.getElementById('modal-score-keep').innerText = keep !== null ? keep + " / 40" : "ยังไม่ประกาศ";
-                document.getElementById('modal-score-mid').innerText = mid !== null ? mid + " / 20" : "ยังไม่ประกาศ";
-                document.getElementById('modal-score-final').innerText = final !== null ? final + " / 40" : "ยังไม่ประกาศ";
-                document.getElementById('modal-score-total').innerText = total !== null ? total + " / 100" : "รอคำนวณ";
+                document.getElementById('modal-score-keep').innerText = keep !== null ? keep + " / 40" : "รอประกาศ";
+                document.getElementById('modal-score-mid').innerText = mid !== null ? mid + " / 20" : "รอประกาศ";
+                document.getElementById('modal-score-final').innerText = final !== null ? final + " / 40" : "รอประกาศ";
+                document.getElementById('modal-score-total').innerText = total !== null ? total + " / 100" : "-";
             }
             document.getElementById('detail-modal').classList.remove('hidden');
         }
@@ -229,7 +233,6 @@
             document.getElementById('detail-modal').classList.add('hidden');
         }
 
-        // 4. ดึงข้อมูล
         function fetchData() {
             let title = '';
             
@@ -241,10 +244,10 @@
                 if(!grade || !room || !studentId) return showToast("กรุณาเลือกระดับชั้น ห้อง และเลขที่ให้ครบถ้วน!");
                 
                 const gradeText = document.getElementById('grade-select').options[document.getElementById('grade-select').selectedIndex].text;
-                title = `แฟ้มประวัตินักเรียน : เลขที่ ${studentId} (${gradeText} / ห้อง ${room})`;
+                title = `แฟ้มประวัตินักเรียน : เลขที่ ${studentId} (${gradeText}/ห้อง ${room})`;
             } else {
                 const teacher = document.getElementById('teacher-select').value;
-                if(!teacher) return showToast("กรุณาเลือกรายชื่อคุณครูที่ต้องการตรวจสอบ!");
+                if(!teacher) return showToast("กรุณาเลือกคุณครูที่ต้องการตรวจสอบ!");
                 const teacherText = document.getElementById('teacher-select').options[document.getElementById('teacher-select').selectedIndex].text;
                 title = `ตารางสอน : ${teacherText.split('-')[1].trim()}`;
             }
@@ -252,17 +255,12 @@
             document.getElementById('display-area').classList.remove('hidden');
             document.getElementById('display-title').innerText = title;
             
-            // ล้างเวลาจำลองเก่าออก ป้องกันการรวนเมื่อผู้ใช้กดย้ำ
             if(simulationTimer) clearTimeout(simulationTimer);
-
             renderInitialData();
-            
-            // ตั้งเวลาจำลองการอัปเดตเกรดใหม่
             simulationTimer = setTimeout(simulateRealtimeGradeUpdate, 3500);
         }
 
         function renderInitialData() {
-            // ใช้รูปภาพจำลองนักเรียน
             document.getElementById('schedule-img').src = `https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=400&q=80`;
             document.getElementById('update-badge').classList.add('hidden');
             document.getElementById('last-update').innerText = new Date().toLocaleTimeString('th-TH');
@@ -272,9 +270,53 @@
             if(currentMode === 'student') {
                 table.innerHTML = `
                     <tr class="clickable-row" onclick="openModal('คณิตศาสตร์พื้นฐาน', '08:30 - 09:20', 'อ.สมปอง สอนดี', 'อาคาร 2 ห้อง 204', 'student', 38, 18, 35, 91)">
-                        <td class="p-4 font-medium text-gray-800">📐 คณิตศาสตร์พื้นฐาน</td>
-                        <td class="p-4 text-gray-500 hidden md:table-cell">08:30 - 09:20</td>
-                        <td class="p-4 text-center"><span class="inline-block bg-green-100 text-green-700 font-bold px-4 py-1.5 rounded-full">4.0</span></td>
+                        <td class="p-3 md:p-4 font-medium text-gray-800">📐 คณิตศาสตร์</td>
+                        <td class="p-3 md:p-4 text-gray-500 hidden md:table-cell">08:30 - 09:20</td>
+                        <td class="p-3 md:p-4 text-center"><span class="inline-block bg-green-100 text-green-700 font-bold px-3 py-1 rounded-full shadow-sm text-xs md:text-sm">4.0</span></td>
                     </tr>
                     <tr class="clickable-row" onclick="openModal('วิทยาศาสตร์', '09:20 - 10:10', 'อ.วิภา ทดลอง', 'ห้องแลปวิทย์ 1', 'student', 35, 15, 30, 80)">
-                        <td class="p-4 font-medium text-gray-800">🔬 วิทยาศาสตร์</td>
+                        <td class="p-3 md:p-4 font-medium text-gray-800">🔬 วิทยาศาสตร์</td>
+                        <td class="p-3 md:p-4 text-gray-500 hidden md:table-cell">09:20 - 10:10</td>
+                        <td class="p-3 md:p-4 text-center"><span class="inline-block bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full shadow-sm text-xs md:text-sm">3.5</span></td>
+                    </tr>
+                    <tr class="clickable-row" id="eng-row" onclick="openModal('ภาษาอังกฤษ', '10:10 - 11:00', 'Teacher John', 'อาคาร 3 ห้อง 301', 'student', 30, null, null, null)">
+                        <td class="p-3 md:p-4 font-medium text-gray-800">🔤 ภาษาอังกฤษ</td>
+                        <td class="p-3 md:p-4 text-gray-500 hidden md:table-cell">10:10 - 11:00</td>
+                        <td class="p-3 md:p-4 text-center"><span class="inline-block bg-gray-100 text-gray-500 text-[10px] md:text-xs px-2 md:px-3 py-1 rounded-full border border-gray-200">รอครูกรอก</span></td>
+                    </tr>
+                `;
+            } else {
+                table.innerHTML = `
+                    <tr class="clickable-row" onclick="openModal('วิชาคณิตศาสตร์ (ม.1/2)', '08:30 - 09:20', '-', 'อาคาร 2 ห้อง 202', 'teacher')">
+                        <td class="p-3 md:p-4 font-medium text-gray-800">ม.1/2 (คณิตฯ)</td>
+                        <td class="p-3 md:p-4 text-gray-500 hidden md:table-cell">08:30 - 09:20</td>
+                        <td class="p-3 md:p-4 text-center text-gray-400">-</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function simulateRealtimeGradeUpdate() {
+            if(currentMode !== 'student') return; 
+
+            document.getElementById('update-badge').classList.remove('hidden');
+            document.getElementById('schedule-img').src = `https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=400&q=80`;
+            
+            const engRow = document.getElementById('eng-row');
+            if(engRow) {
+                engRow.style.backgroundColor = '#fef08a';
+                setTimeout(() => engRow.style.backgroundColor = 'transparent', 2000);
+                engRow.setAttribute("onclick", "openModal('ภาษาอังกฤษ', '10:10 - 11:00', 'Teacher John', 'อาคาร 3 ห้อง 301', 'student', 30, 15, 30, 75)");
+                engRow.innerHTML = `
+                    <td class="p-3 md:p-4 font-medium text-gray-800">🔤 ภาษาอังกฤษ</td>
+                    <td class="p-3 md:p-4 text-gray-500 hidden md:table-cell">10:10 - 11:00</td>
+                    <td class="p-3 md:p-4 text-center"><span class="inline-block bg-yellow-100 text-yellow-700 font-bold px-3 py-1 rounded-full shadow-sm text-xs md:text-sm">3.0</span></td>
+                `;
+            }
+
+            document.getElementById('last-update').innerText = new Date().toLocaleTimeString('th-TH');
+            setTimeout(() => document.getElementById('update-badge').classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>
